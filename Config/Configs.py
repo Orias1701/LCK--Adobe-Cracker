@@ -56,7 +56,16 @@ def ConfigValues(pdfname="HNMU", service="Categories"):
     RERANK_MODEL = "BAAI/bge-reranker-base"
     CHUNKS_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
     EMBEDD_MODEL = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
+    # EMBEDD_MODEL = "BAAI/bge-vi-base"
     RESPON_MODEL = "gpt-3.5-turbo"
+    # PROMPT_FORMAT = """
+    # <|im_start|>system
+    # {system_prompt}<|im_end|>
+    # <|im_start|>user
+    # {prompt}<|im_end|>
+    # <|im_start|>assistant
+    # """
+
     SUMARY_MODEL = "LongK171/bartpho-syllable-vnexpress"
 
     WORD_LIMIT = 1000

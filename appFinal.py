@@ -18,7 +18,7 @@ from Libraries import Summarizer_Runner as SummaryRun
 
 #### HARD CODE
 service = "Categories"
-infilename = "HNMU"
+infilename = "HNMU_Merged"
 JsonKey = "paragraphs"
 JsonField = "Text"
 
@@ -113,7 +113,7 @@ Loader = ML.ModelLoader()
 
 #### LOAD MODELS
 indexer, embeddDevice = Loader.load_encoder(EMBEDD_MODEL, EMBEDD_CACHED_MODEL)
-chunker, chunksDevice = Loader.load_encoder(CHUNKS_MODEL, CHUNKS_CACHED_MODEL)
+# chunker, chunksDevice = Loader.load_encoder(CHUNKS_MODEL, CHUNKS_CACHED_MODEL)
 
 tokenizer, summarizer, summaryDevice = Loader.load_summarizer(SUMARY_MODEL, SUMARY_CACHED_MODEL)
 
