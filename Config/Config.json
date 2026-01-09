@@ -11,14 +11,13 @@
     "prompt_reason_refine-vi": "Prompts/VI-Reason-Refine.txt",
     "prompt_critic_refine-vi": "Prompts/VI-Critic-Refine.txt",
     "local_model_dir": "Models",
-    "local_llms_dir": "LLMS"
+    "local_model_typ": "LLMS"
   },
   "models": {
     "responding_model": {
       "publisher": "bartowski",
-      "model_type": "Qwen2.5-3B-Instruct-GGUF",
-      "hf_repo_id": "bartowski/Qwen2.5-3B-Instruct-GGUF",
-      "hf_filename": "Qwen2.5-3B-Instruct-Q6_K_L.gguf"
+      "model_name": "Llama-3.2-3B-Instruct-GGUF",      
+      "model_file": "Llama-3.2-3B-Instruct-Q6_K_L.gguf"
     }
   },
   "dataset-en": {
