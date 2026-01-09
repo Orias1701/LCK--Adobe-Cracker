@@ -10,12 +10,25 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# -------------------------
-# 🔒 Bearer token (optional)
-# -------------------------
-
 API_SECRET = os.getenv("API_SECRET", "").strip() 
 
+# =========================
+# 🧩 Import project modules
+# =========================
+try:
+    print("Đang tải appFinal (models, indexes...). Vui lòng chờ...")
+    import appFinal
+    print("✅ Đã load appFinal.")
+except Exception as e:
+    appFinal = None
+    print(f"⚠️ CRITICAL: Không thể import appFinal: {e}")
+    raise e
+# =========================
+
+
+# -------------------------
+# 🔒 Bearer token
+# -------------------------
 def requireBearer(authorization: Optional[str] = Header(None)):
     """Kiểm tra Bearer token nếu bật API_SECRET."""
     if not API_SECRET:
@@ -25,18 +38,6 @@ def requireBearer(authorization: Optional[str] = Header(None)):
     token = authorization.split(" ", 1)[1].strip()
     if token != API_SECRET:
         raise HTTPException(status_code=403, detail="Invalid token")
-
-# -------------------------
-# 🧩 Import project modules
-# -------------------------
-try:
-    print("Đang tải appFinal (models, indexes...). Vui lòng chờ...")
-    import appFinal as appCalled
-    print("✅ Đã load appFinal.")
-except Exception as e:
-    appCalled = None
-    print(f"⚠️ CRITICAL: Không thể import appFinal: {e}")
-    raise e
 
 # -------------------------
 # 🚀 Init FastAPI
@@ -66,7 +67,7 @@ def root():
         "message": "📘 Document AI API đang chạy.",
         "status": "ok",
         "docs": "/docs",
-        "appFinal_loaded": bool(appCalled),
+        "appFinal_loaded": bool(appFinal),
     }
 
 # -------------------------
@@ -75,13 +76,13 @@ def root():
 @app.get("/health")
 def health(_=Depends(requireBearer)):
     """Kiểm tra trạng thái hoạt động."""
-    appOk = bool(appCalled)
+    appOk = bool(appFinal)
     return {
         "status": "ok",
         "time": time.time(),
         "appFinal_loaded": appOk,
-        "main_index_loaded": bool(appCalled.gFaissIndex) if appOk else False,
-        "service_index_loaded": bool(appCalled.gServiceFaissIndex) if appOk else False,
+        "main_index_loaded": bool(appFinal.gFaissIndex) if appOk else False,
+        "service_index_loaded": bool(appFinal.gServiceFaissIndex) if appOk else False,
     }
 
 # -------------------------
@@ -95,11 +96,11 @@ async def processPdf(file: UploadFile = File(...), _=Depends(requireBearer)):
 
     pdfBytes = await file.read()
 
-    if not appCalled or not hasattr(appCalled, "processPdfPipeline"):
+    if not appFinal or not hasattr(appFinal, "processPdfPipeline"):
         raise HTTPException(status_code=500, detail="Không tìm thấy appFinal.processPdfPipeline().")
 
     try:
-        result = appCalled.processPdfPipeline(pdfBytes)
+        result = appFinal.processPdfPipeline(pdfBytes)
         return {
             "status": "success",
             "checkstatus": result.get("checkstatus"),
@@ -124,12 +125,12 @@ def search(body: SearchIn, _=Depends(requireBearer)):
     if not q:
         raise HTTPException(status_code=400, detail="query không được để trống")
 
-    if not appCalled or not hasattr(appCalled, "searchPipeline"):
+    if not appFinal or not hasattr(appFinal, "searchPipeline"):
         raise HTTPException(status_code=500, detail="Không tìm thấy appFinal.searchPipeline().")
 
     try:
         # Gọi hàm pipeline (hàm này giờ trả về List[dict])
-        results = appCalled.searchPipeline(q, k=body.k)
+        results = appFinal.searchPipeline(q, k=body.k)
         return results # Trả về list các đối tượng chunk
     except Exception as e:
         print(f"Lỗi /search: {e}")
@@ -153,12 +154,12 @@ def summarizeText(body: SummIn, _=Depends(requireBearer)):
         raise HTTPException(status_code=400, detail="text không được để trống")
 
     # Lưu ý: tên biến là summaryEngine (không phải summarizer_engine)
-    if not appCalled or not hasattr(appCalled, "summaryEngine"):
+    if not appFinal or not hasattr(appFinal, "summaryEngine"):
         raise HTTPException(status_code=500, detail="Không tìm thấy appFinal.summaryEngine.")
 
     try:
         # Gọi thẳng vào đối tượng summaryEngine
-        summarized = appCalled.summaryEngine.summarize(
+        summarized = appFinal.summaryEngine.summarize(
             text, 
             minInput=body.minInput, 
             maxInput=body.maxInput,

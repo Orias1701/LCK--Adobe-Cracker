@@ -32,8 +32,8 @@ ENV HOST=0.0.0.0
 ENV PORT=7860
 
 # Optional envs (override in Space Secrets)
-ENV HF_TOKEN=""
-ENV API_SECRET=""
+# ENV HF_TOKEN="BRUH"
+# ENV API_SECRET="BRUH"
 
 # Start the server
 CMD ["/bin/bash", "start.sh"]
