@@ -1,0 +1,55 @@
+{
+  "paths": {
+    "prompt_reason_no-en": "Prompts/EN-Reason-No.txt",
+    "prompt_reason_no-vi": "Prompts/VI-Reason-No.txt",
+    "prompt_reason_first-en": "Prompts/EN-Reason-First.txt",
+    "prompt_critic_first-en": "Prompts/EN-Critic-First.txt",
+    "prompt_reason_first-vi": "Prompts/VI-Reason-First.txt",
+    "prompt_critic_first-vi": "Prompts/VI-Critic-First.txt",
+    "prompt_reason_refine-en": "Prompts/EN-Reason-Refine.txt",
+    "prompt_critic_refine-en": "Prompts/EN-Critic-Refine.txt",
+    "prompt_reason_refine-vi": "Prompts/VI-Reason-Refine.txt",
+    "prompt_critic_refine-vi": "Prompts/VI-Critic-Refine.txt",
+    "local_model_dir": "Models",
+    "local_llms_dir": "LLMS"
+  },
+  "models": {
+    "responding_model": {
+      "publisher": "bartowski",
+      "model_type": "Qwen2.5-3B-Instruct-GGUF",
+      "hf_repo_id": "bartowski/Qwen2.5-3B-Instruct-GGUF",
+      "hf_filename": "Qwen2.5-3B-Instruct-Q6_K_L.gguf"
+    }
+  },
+  "dataset-en": {
+    "publisher": "SurAyush",
+    "name": "SurAyush/News_Summary_Dataset",
+    "split": "train[:1000]"
+  },
+  "dataset-vi": {
+    "publisher": "LongK171",
+    "name": "LongK171/VNexpress",
+    "split": "train[:1000]"
+  },
+  "reason_params": {
+    "max_new_tokens": 512,
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "seed": 42
+  },
+  "critic_params": {
+    "max_new_tokens": 512,
+    "temperature": 0.1,
+    "top_p": 0.8,
+    "seed": 314159
+  },
+  "llama_cpp_params": {
+    "n_gpu_layers": -1,
+    "n_ctx": 4096,
+    "verbose": true
+  },
+  "flow_params": {
+    "max_iters": 3,
+    "min_improve": 0.1
+  }
+}
