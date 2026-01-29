@@ -171,7 +171,7 @@ def processChunksPipeline(
         dropFields=dropFields,
     )
 
-    # 2️⃣ Biến thành text (cùng số lượng chunk)
+    # 2️⃣ Biến thành text
     chunksText = collectChunkText(chunksJson)
 
     # 3️⃣ Lấy các trường cụ thể

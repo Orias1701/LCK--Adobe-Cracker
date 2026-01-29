@@ -82,3 +82,30 @@ class ChunkBuilder:
             self.indexCounter += 1
         
         return self.StructDict
+
+    def chunkClean(StructsDict, RawLvlsDict):
+        firstKey = list(RawLvlsDict[0].keys())[0]
+
+        segmentDict = []
+        for item in StructsDict:
+            value = item.get(firstKey)
+            if not value:
+                continue
+            
+            if isinstance(value, list):
+                value = " ".join(
+                    v.strip() for v in value
+                    if isinstance(v, str) and v.strip().lower() != "none"
+                )
+                if value.strip():
+                    segmentDict.append(item)
+
+            elif isinstance(value, str):
+                text = value.strip()
+                if text and text.lower() != "none":
+                    segmentDict.append(item)
+
+        for i, item in enumerate(segmentDict, start=1):
+            item["Index"] = i
+
+        return segmentDict

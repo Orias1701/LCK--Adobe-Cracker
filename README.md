@@ -86,7 +86,7 @@ PDF PROCESSOR
 
 1. conda env create -f requirements_cuda12.yml
 2. conda activate master
-3. uvicorn api:app --host 0.0.0.0 --port 8000
+3. uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 4. Demo > index.html >
 
 ---
