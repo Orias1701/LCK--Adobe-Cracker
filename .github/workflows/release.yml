@@ -1,0 +1,120 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  detect-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.find.outputs.matrix }}
+      has_unreleased: ${{ steps.find.outputs.has_unreleased }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find unreleased versions
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # List all v* directories in root
+          VERSIONS=$(ls -d v*/ 2>/dev/null | sed 's|/||' || true)
+
+          if [ -z "$VERSIONS" ]; then
+            echo "No version directories found"
+            echo "has_unreleased=false" >> "$GITHUB_OUTPUT"
+            echo 'matrix={"version":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Found version directories:"
+          echo "$VERSIONS"
+
+          # Get existing GitHub releases
+          EXISTING=$(gh release list --limit 100 --json tagName -q '.[].tagName' 2>/dev/null || true)
+          echo "Existing releases:"
+          echo "$EXISTING"
+
+          # Build list of unreleased versions
+          UNRELEASED=()
+          for v in $VERSIONS; do
+            if ! echo "$EXISTING" | grep -qx "$v"; then
+              UNRELEASED+=("\"$v\"")
+            fi
+          done
+
+          if [ ${#UNRELEASED[@]} -eq 0 ]; then
+            echo "All versions already have releases"
+            echo "has_unreleased=false" >> "$GITHUB_OUTPUT"
+            echo 'matrix={"version":[]}' >> "$GITHUB_OUTPUT"
+          else
+            JOINED=$(IFS=,; echo "${UNRELEASED[*]}")
+            MATRIX="{\"version\":[$JOINED]}"
+            echo "Unreleased versions: $MATRIX"
+            echo "has_unreleased=true" >> "$GITHUB_OUTPUT"
+            echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-release:
+    needs: detect-versions
+    if: needs.detect-versions.outputs.has_unreleased == 'true'
+    runs-on: windows-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-versions.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Verify third-party binaries
+        run: python verify.py "${{ matrix.version }}"
+
+      - name: Build ${{ matrix.version }}
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force
+          # Override Read-Host so interactive prompts auto-confirm in CI
+          function global:Read-Host { return 'y' }
+          # Reset PSModulePath to Windows PowerShell 5.1 defaults so that
+          # powershell.exe subprocesses (spawned by build.ps1) can load
+          # modules like Microsoft.PowerShell.Security without conflicts.
+          $env:PSModulePath = @(
+            "$env:USERPROFILE\Documents\WindowsPowerShell\Modules",
+            "C:\Program Files\WindowsPowerShell\Modules",
+            "C:\Windows\system32\WindowsPowerShell\v1.0\Modules"
+          ) -join ';'
+          Set-Location "${{ matrix.version }}"
+          & .\build.ps1
+
+      - name: Find built executable
+        id: find-exe
+        shell: bash
+        run: |
+          EXE_PATH=$(find "${{ matrix.version }}/Release" -name "GenP*.exe" -type f | head -1)
+          if [ -z "$EXE_PATH" ]; then
+            echo "::error::No executable found in ${{ matrix.version }}/Release"
+            exit 1
+          fi
+          EXE_NAME=$(basename "$EXE_PATH")
+          echo "exe_path=$EXE_PATH" >> "$GITHUB_OUTPUT"
+          echo "exe_name=$EXE_NAME" >> "$GITHUB_OUTPUT"
+          echo "Found: $EXE_PATH"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release create "${{ matrix.version }}" \
+            --title "GenP ${{ matrix.version }}" \
+            --generate-notes \
+            "${{ steps.find-exe.outputs.exe_path }}#${{ steps.find-exe.outputs.exe_name }}" \
+            "${{ matrix.version }}/GenP/config.ini#config.ini"
